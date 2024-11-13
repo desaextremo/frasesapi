@@ -47,4 +47,4 @@ def seleccionar_frase():
     archivo.close()
     
     #Seleccionar una frase aleatoriamente de la lista
-    return random.choice(frases)
+    return random.choice(frases).strip()  # Remover saltos de línea y espacios
