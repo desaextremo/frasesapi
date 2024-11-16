@@ -1,4 +1,4 @@
-'''Versión 2
+'''Versión 3
 
 Usar FastApi para exponer nuestros métodos a internet
 
@@ -14,37 +14,33 @@ Usar FastApi para exponer nuestros métodos a internet
 4 Probar aplicación con servidor uvicorn
 '''
 import random
-from fastapi import FastAPI
-import uvicorn
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-
-#Llamamos a FastAPI, y desde este momento haremos referencia a este mediante la variable 'app'
 app = FastAPI()
 
-# Permitir solicitudes desde todos los orígenes
+# Configuración de CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Puedes restringir esto a los orígenes que desees permitir
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["GET"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-#Definir función 'anotada' para consultar una frase aleatoria
 @app.get("/getfrase")
 def seleccionar_frase():
     nombre_archivo = "frases.txt"
+    try:
+        with open(nombre_archivo, "r") as file:
+            frases = [line.strip() for line in file if line.strip()]
+        
+        if not frases:
+            return {"message": "No hay frases disponibles."}
 
-    #abrir archivo
-    archivo = open(nombre_archivo,"r",encoding="utf8")
+        return {"frase": random.choice(frases)}  # Retorna una frase en formato JSON
 
-    #carga el contenido del archivo en una lista
-    frases = archivo.readlines()
-
-    ##cierro el archivo
-    archivo.close()
-    
-    #Seleccionar una frase aleatoriamente de la lista
-    return random.choice(frases).strip()  # Remover saltos de línea y espacios
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Archivo de frases no encontrado.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Error al leer las frases.")
